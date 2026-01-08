@@ -12,6 +12,7 @@ class LivestreamScreen extends StatefulWidget {
 
 class _LivestreamScreenState extends State<LivestreamScreen> {
   final TextEditingController _chatController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -27,6 +28,15 @@ class _LivestreamScreenState extends State<LivestreamScreen> {
       backgroundColor: Colors.black,
       body: Consumer<LivestreamProvider>(
         builder: (context, provider, child) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          });
           return Stack(
             children: [
               // 1. Fullscreen Video Background
@@ -102,7 +112,7 @@ class _LivestreamScreenState extends State<LivestreamScreen> {
                   radius: 15,
                   backgroundColor: Colors.pink,
                   child: Text(
-                    provider.currentUser?.name[0].toUpperCase() ?? 'U',
+                    (provider.currentUser?.name ?? 'User')[0].toUpperCase(),
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
@@ -204,6 +214,7 @@ class _LivestreamScreenState extends State<LivestreamScreen> {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: provider.messages.length,
               itemBuilder: (context, index) {
                 final msg = provider.messages[index];

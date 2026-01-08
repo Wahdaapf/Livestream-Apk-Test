@@ -10,4 +10,21 @@ class ChatMessage {
     required this.text,
     required this.timestamp,
   });
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'sender': sender,
+      'text': text,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory ChatMessage.fromMap(Map<String, dynamic> map) {
+    return ChatMessage(
+      id: map['id'] ?? '',
+      sender: map['sender'] ?? '',
+      text: map['text'] ?? '',
+      timestamp: DateTime.parse(map['timestamp']),
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../models/chat_message.dart';
 
 typedef void OnCandidate(RTCIceCandidate candidate);
 typedef void OnAnswer(RTCSessionDescription answer);
@@ -137,9 +138,45 @@ class SignalingService {
       await doc.reference.delete();
     }
 
+    // Delete comments
+    var comments = await roomRef.collection('comments').get();
+    for (var doc in comments.docs) {
+      await doc.reference.delete();
+    }
+
     await roomRef.delete();
     _answerProcessed = false;
     _offerProcessed = false;
     print("SIGNALING: Room cleaned successfully");
+  }
+
+  Future<void> addComment(ChatMessage comment) async {
+    print("SIGNALING: Adding comment: ${comment.text}");
+    await _db
+        .collection('rooms')
+        .doc('livestream')
+        .collection('comments')
+        .add(comment.toMap());
+  }
+
+  void listenForComments(Function(ChatMessage) onComment) {
+    print("SIGNALING: Listening for comments...");
+    _db
+        .collection('rooms')
+        .doc('livestream')
+        .collection('comments')
+        .orderBy('timestamp')
+        .snapshots()
+        .listen((snapshot) {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              var data = change.doc.data();
+              if (data != null) {
+                print("SIGNALING: New comment received: ${data['text']}");
+                onComment(ChatMessage.fromMap(data));
+              }
+            }
+          }
+        });
   }
 }

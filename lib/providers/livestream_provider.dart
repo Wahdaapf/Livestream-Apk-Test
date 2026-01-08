@@ -26,6 +26,12 @@ class LivestreamProvider with ChangeNotifier {
 
   Future<void> init() async {
     await _webRTCService.init();
+
+    _signalingService.listenForComments((comment) {
+      _messages.add(comment);
+      notifyListeners();
+    });
+
     if (_currentUser != null && !_currentUser!.isHost) {
       // Automagically join if viewer
       joinLive();
@@ -146,13 +152,12 @@ class LivestreamProvider with ChangeNotifier {
 
   void sendMessage(String text, String sender) {
     final message = ChatMessage(
-      id: DateTime.now().toString(),
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       sender: sender,
       text: text,
       timestamp: DateTime.now(),
     );
-    _messages.add(message);
-    notifyListeners();
+    _signalingService.addComment(message);
   }
 
   void updateViewerCount(int count) {
